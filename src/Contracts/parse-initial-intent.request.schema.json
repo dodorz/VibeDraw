@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibedraw/contracts/parse-initial-intent.request.schema.json",
+  "title": "ParseInitialIntentRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "type",
+    "prompt"
+  ],
+  "properties": {
+    "type": {
+      "const": "parse_initial_intent"
+    },
+    "prompt": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
+

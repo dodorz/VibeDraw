@@ -1,0 +1,11 @@
+{
+  "name": "vibedraw",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:contracts": "node --test tests/contracts/contracts.test.js"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1"
+  }
+}

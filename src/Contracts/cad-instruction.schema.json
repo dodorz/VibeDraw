@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibedraw/contracts/cad-instruction.schema.json",
+  "title": "CadInstructionBatch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "project_id",
+    "drawing_id",
+    "instructions"
+  ],
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "drawing_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "instructions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/instruction"
+      }
+    }
+  },
+  "$defs": {
+    "point2d": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "instruction": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/polyline"
+        },
+        {
+          "$ref": "#/$defs/line"
+        },
+        {
+          "$ref": "#/$defs/text"
+        },
+        {
+          "$ref": "#/$defs/alignedDimension"
+        }
+      ]
+    },
+    "polyline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "layer",
+        "view_id",
+        "source_component_id",
+        "points",
+        "closed"
+      ],
+      "properties": {
+        "kind": {
+          "const": "polyline"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "view_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_component_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "points": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/point2d"
+          }
+        },
+        "closed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "line": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "layer",
+        "view_id",
+        "source_component_id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "kind": {
+          "const": "line"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "view_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_component_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "$ref": "#/$defs/point2d"
+        },
+        "to": {
+          "$ref": "#/$defs/point2d"
+        }
+      }
+    },
+    "text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "layer",
+        "view_id",
+        "source_component_id",
+        "position",
+        "text",
+        "height"
+      ],
+      "properties": {
+        "kind": {
+          "const": "text"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "view_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_component_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "$ref": "#/$defs/point2d"
+        },
+        "text": {
+          "type": "string"
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "alignedDimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "layer",
+        "view_id",
+        "source_component_id",
+        "from",
+        "to",
+        "dimension_line_point",
+        "text"
+      ],
+      "properties": {
+        "kind": {
+          "const": "aligned_dimension"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "view_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_component_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "$ref": "#/$defs/point2d"
+        },
+        "to": {
+          "$ref": "#/$defs/point2d"
+        },
+        "dimension_line_point": {
+          "$ref": "#/$defs/point2d"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

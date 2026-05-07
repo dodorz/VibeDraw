@@ -1,0 +1,78 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# VS Code / JetBrains
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio / .NET
+.vs/
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+TestResults/
+*.rsuser
+*.cache
+*.pdb
+*.tmp
+*.log
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# AutoCAD plugin build outputs
+*.bundle/
+*.dbx
+*.arx
+
+# Python local service
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Local app/service environment
+.env
+.env.*
+
+# Local runtime data and caches
+.cache/
+node_modules/
+npm-debug.log*
+tmp/
+temp/
+logs/
+
+# AutoCAD temporary and backup files
+*.bak
+*.sv$
+*.ac$
+*.dwl
+*.dwl2
+
+# Generated drawing artifacts
+*.dwg
+*.dxf
+*.pdf
+fixtures/cad-instructions/*-preview.svg
+
+# Local bridge project sidecar/runtime outputs
+*.bridgecad.session.json
+*.bridgecad.runtime.json
+*.bridgecad.cache.json

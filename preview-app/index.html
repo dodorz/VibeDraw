@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VibeDraw Preview</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="controls-panel">
+        <div class="panel-header">
+          <p class="eyebrow">VibeDraw</p>
+          <h1>Bridge Preview Lab</h1>
+          <p class="lede">
+            Try the no-AutoCAD MVP by editing bridge parameters and regenerating
+            the drawing preview instantly.
+          </p>
+        </div>
+
+        <section class="prompt-panel">
+          <div class="section-heading">
+            <p class="eyebrow">Intent</p>
+            <h2>Natural-Language Draft</h2>
+          </div>
+          <div class="service-grid">
+            <label class="field">
+              <span>Parser Mode</span>
+              <select id="parserMode">
+                <option value="local">Local rule parser</option>
+                <option value="mock">LLM service mock</option>
+                <option value="ollama">LLM service via Ollama</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Service URL</span>
+              <input id="serviceUrl" type="text" value="http://127.0.0.1:8011" />
+            </label>
+            <label class="field field-full">
+              <span>Ollama model</span>
+              <input id="ollamaModel" type="text" value="glm-4.7:cloud" />
+            </label>
+          </div>
+          <label class="field field-full">
+            <span>Bridge description</span>
+            <textarea
+              id="promptInput"
+              rows="4"
+            >画一座40+70+40米跨径、桥宽7.5米的预应力连续梁桥，采用单箱单室，双柱墩，重力式桥台。</textarea>
+          </label>
+          <div class="actions-row prompt-actions">
+            <button id="parsePromptButton" class="primary-button" type="button">
+              Parse Into Parameters
+            </button>
+            <button id="samplePromptButton" class="secondary-button" type="button">
+              Load Another Sample
+            </button>
+          </div>
+          <div class="assumption-block">
+            <p class="assumption-title">Assumptions</p>
+            <ul id="assumptionList"></ul>
+          </div>
+        </section>
+
+        <section class="prompt-panel patch-panel">
+          <div class="section-heading">
+            <p class="eyebrow">Iteration</p>
+            <h2>Patch Current Model</h2>
+          </div>
+          <label class="field field-full">
+            <span>Edit instruction</span>
+            <textarea
+              id="patchPromptInput"
+              rows="3"
+            >把中跨改成75米。</textarea>
+          </label>
+          <div class="actions-row prompt-actions">
+            <button id="applyPatchButton" class="primary-button" type="button">
+              Apply Patch
+            </button>
+            <button id="samplePatchButton" class="secondary-button" type="button">
+              Load Patch Sample
+            </button>
+          </div>
+          <div class="assumption-block">
+            <p class="assumption-title">Patch Summary</p>
+            <ul id="patchSummaryList"></ul>
+          </div>
+        </section>
+
+        <section class="control-group">
+          <label class="field">
+            <span>Project ID</span>
+            <input id="projectId" type="text" value="bridge_001" />
+          </label>
+          <label class="field">
+            <span>Start Station</span>
+            <input id="startStation" type="text" value="K0+000" />
+          </label>
+          <label class="field">
+            <span>Spans (m)</span>
+            <input id="spans" type="text" value="40,70,40" />
+          </label>
+          <label class="field">
+            <span>Deck Width (m)</span>
+            <input id="deckWidth" type="number" step="0.1" min="1" value="7.5" />
+          </label>
+          <label class="field">
+            <span>Section Type</span>
+            <select id="sectionType">
+              <option value="single_box_single_cell">Single box single cell</option>
+              <option value="single_box_double_cell">Single box double cell</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Pier Type</span>
+            <select id="pierType">
+              <option value="double_column">Double column</option>
+              <option value="solid_pier">Solid pier</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Abutment Type</span>
+            <select id="abutmentType">
+              <option value="gravity">Gravity</option>
+              <option value="seat">Seat</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Girder Depth Policy</span>
+            <select id="girderDepthPolicy">
+              <option value="auto">Auto</option>
+              <option value="manual">Manual</option>
+            </select>
+          </label>
+          <label class="field" id="girderDepthField">
+            <span>Girder Depth (m)</span>
+            <input id="girderDepth" type="number" step="0.1" min="0.1" value="2.5" />
+          </label>
+        </section>
+
+        <section class="actions-row">
+          <button id="regenerateButton" class="primary-button" type="button">
+            Regenerate Preview
+          </button>
+          <button id="resetButton" class="secondary-button" type="button">
+            Reset Sample
+          </button>
+        </section>
+
+        <section class="actions-row export-row">
+          <button id="downloadSvgButton" class="secondary-button" type="button">
+            Download SVG
+          </button>
+          <button id="downloadModelButton" class="secondary-button" type="button">
+            Download JSON
+          </button>
+        </section>
+
+        <section class="status-band">
+          <p id="statusText">Ready.</p>
+        </section>
+        <section class="debug-panel">
+          <div class="section-heading">
+            <p class="eyebrow">Diagnostics</p>
+            <h2>Request Log</h2>
+          </div>
+          <div class="debug-meta">
+            <span id="busyBadge" class="busy-badge idle">Idle</span>
+            <span id="lastModeText">Mode: local</span>
+          </div>
+          <ol id="requestLog" class="request-log"></ol>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <section class="preview-stage">
+          <div class="stage-header">
+            <div>
+              <p class="eyebrow">Live Output</p>
+              <h2>SVG Drawing Preview</h2>
+            </div>
+            <div class="legend">
+              <span><i class="legend-swatch girder"></i> Girder</span>
+              <span><i class="legend-swatch deck"></i> Deck</span>
+              <span><i class="legend-swatch section"></i> Section</span>
+              <span><i class="legend-swatch dim"></i> Dimension</span>
+            </div>
+          </div>
+          <div id="previewViewport" class="preview-viewport"></div>
+        </section>
+
+        <section class="data-grid">
+          <div class="data-pane">
+            <div class="pane-header">
+              <p class="eyebrow">Model</p>
+              <h3>BridgeModel</h3>
+            </div>
+            <pre id="bridgeModelOutput"></pre>
+          </div>
+          <div class="data-pane">
+            <div class="pane-header">
+              <p class="eyebrow">Instructions</p>
+              <h3>CadInstruction Batch</h3>
+            </div>
+            <pre id="instructionOutput"></pre>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

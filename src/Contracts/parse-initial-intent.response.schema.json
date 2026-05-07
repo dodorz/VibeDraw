@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibedraw/contracts/parse-initial-intent.response.schema.json",
+  "title": "ParseInitialIntentResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "intent",
+    "assumptions",
+    "questions"
+  ],
+  "properties": {
+    "intent": {
+      "$ref": "bridge-intent.schema.json"
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+

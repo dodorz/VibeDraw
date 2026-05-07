@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibedraw/contracts/patch-model.request.schema.json",
+  "title": "PatchModelRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "type",
+    "current_model",
+    "prompt"
+  ],
+  "properties": {
+    "type": {
+      "const": "patch_model"
+    },
+    "current_model": {
+      "$ref": "bridge-model.schema.json"
+    },
+    "prompt": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
+

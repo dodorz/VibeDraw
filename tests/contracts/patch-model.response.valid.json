@@ -1,0 +1,13 @@
+{
+  "patches": [
+    {
+      "op": "replace",
+      "path": "/bridge/spans_m/1",
+      "value": 75
+    }
+  ],
+  "affected_views": [
+    "plan",
+    "elevation"
+  ]
+}

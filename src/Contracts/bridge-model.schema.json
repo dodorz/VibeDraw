@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibedraw/contracts/bridge-model.schema.json",
+  "title": "BridgeModel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "project_id",
+    "bridge"
+  ],
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "bridge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "material",
+        "spans_m",
+        "deck_width_m",
+        "alignment",
+        "superstructure",
+        "substructure",
+        "drawings"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "continuous_girder"
+          ]
+        },
+        "material": {
+          "type": "string",
+          "enum": [
+            "prestressed_concrete"
+          ]
+        },
+        "spans_m": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "deck_width_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "alignment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "start_station"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "straight",
+                "curve"
+              ]
+            },
+            "start_station": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "superstructure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "section_type",
+            "girder_depth_policy"
+          ],
+          "properties": {
+            "section_type": {
+              "type": "string",
+              "enum": [
+                "single_box_single_cell",
+                "single_box_double_cell"
+              ]
+            },
+            "girder_depth_policy": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "manual"
+              ]
+            },
+            "girder_depth_m": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "substructure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pier_type",
+            "abutment_type"
+          ],
+          "properties": {
+            "pier_type": {
+              "type": "string",
+              "enum": [
+                "double_column",
+                "solid_pier"
+              ]
+            },
+            "abutment_type": {
+              "type": "string",
+              "enum": [
+                "gravity",
+                "seat"
+              ]
+            }
+          }
+        },
+        "drawings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "general_arrangement",
+              "plan",
+              "elevation",
+              "typical_section"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+

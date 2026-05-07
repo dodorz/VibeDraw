@@ -1,0 +1,12 @@
+{
+  "patches": [
+    {
+      "op": "replace",
+      "path": "/bridge/unsupported_field",
+      "value": 75
+    }
+  ],
+  "affected_views": [
+    "elevation"
+  ]
+}

@@ -1,0 +1,2 @@
+Draw a prestressed continuous girder bridge with spans 40+70+40 m and bridge width 7.5 m.
+

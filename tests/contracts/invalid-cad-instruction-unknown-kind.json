@@ -1,0 +1,14 @@
+{
+  "project_id": "bridge_001",
+  "drawing_id": "general_arrangement_001",
+  "instructions": [
+    {
+      "kind": "spline",
+      "id": "bad_instruction_001",
+      "layer": "BRIDGE_GIRDER",
+      "view_id": "elevation_main",
+      "source_component_id": "main_girder"
+    }
+  ]
+}
+

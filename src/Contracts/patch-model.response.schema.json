@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibedraw/contracts/patch-model.response.schema.json",
+  "title": "PatchModelResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "patches",
+    "affected_views"
+  ],
+  "properties": {
+    "patches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "op",
+          "path",
+          "value"
+        ],
+        "properties": {
+          "op": {
+            "type": "string",
+            "enum": [
+              "replace",
+              "add",
+              "remove"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {}
+        }
+      }
+    },
+    "affected_views": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "plan",
+          "elevation",
+          "typical_section"
+        ]
+      }
+    }
+  }
+}
+

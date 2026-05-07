@@ -1,0 +1,39 @@
+{
+  "project_id": "bridge_001",
+  "drawing_id": "general_arrangement_001",
+  "drawing_type": "general_arrangement",
+  "sheet": {
+    "size": "A1",
+    "scale": 200
+  },
+  "views": [
+    {
+      "view_id": "elevation_main",
+      "type": "elevation",
+      "origin": [
+        0,
+        0
+      ],
+      "scale": 200
+    },
+    {
+      "view_id": "plan_main",
+      "type": "plan",
+      "origin": [
+        0,
+        -120
+      ],
+      "scale": 200
+    },
+    {
+      "view_id": "typical_section_main",
+      "type": "typical_section",
+      "origin": [
+        190,
+        0
+      ],
+      "scale": 100
+    }
+  ]
+}
+

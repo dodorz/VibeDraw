@@ -1,0 +1,158 @@
+{
+  "project_id": "bridge_001",
+  "drawing_id": "general_arrangement_001",
+  "instructions": [
+    {
+      "kind": "polyline",
+      "id": "elevation_girder_bottom",
+      "layer": "BRIDGE_GIRDER",
+      "view_id": "elevation_main",
+      "source_component_id": "main_girder",
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          40,
+          0
+        ],
+        [
+          110,
+          0
+        ],
+        [
+          150,
+          0
+        ]
+      ],
+      "closed": false
+    },
+    {
+      "kind": "aligned_dimension",
+      "id": "dim_span_1",
+      "layer": "DIM",
+      "view_id": "elevation_main",
+      "source_component_id": "span_1",
+      "from": [
+        0,
+        -5
+      ],
+      "to": [
+        40,
+        -5
+      ],
+      "dimension_line_point": [
+        20,
+        -12
+      ],
+      "text": "40m"
+    },
+    {
+      "kind": "aligned_dimension",
+      "id": "dim_span_2",
+      "layer": "DIM",
+      "view_id": "elevation_main",
+      "source_component_id": "span_2",
+      "from": [
+        40,
+        -5
+      ],
+      "to": [
+        110,
+        -5
+      ],
+      "dimension_line_point": [
+        75,
+        -12
+      ],
+      "text": "70m"
+    },
+    {
+      "kind": "aligned_dimension",
+      "id": "dim_span_3",
+      "layer": "DIM",
+      "view_id": "elevation_main",
+      "source_component_id": "span_3",
+      "from": [
+        110,
+        -5
+      ],
+      "to": [
+        150,
+        -5
+      ],
+      "dimension_line_point": [
+        130,
+        -12
+      ],
+      "text": "40m"
+    },
+    {
+      "kind": "polyline",
+      "id": "plan_deck_outline",
+      "layer": "BRIDGE_DECK",
+      "view_id": "plan_main",
+      "source_component_id": "deck_outline",
+      "points": [
+        [
+          0,
+          -123.75
+        ],
+        [
+          150,
+          -123.75
+        ],
+        [
+          150,
+          -116.25
+        ],
+        [
+          0,
+          -116.25
+        ]
+      ],
+      "closed": true
+    },
+    {
+      "kind": "polyline",
+      "id": "typical_section_outline",
+      "layer": "BRIDGE_SECTION",
+      "view_id": "typical_section_main",
+      "source_component_id": "typical_section",
+      "points": [
+        [
+          190,
+          0
+        ],
+        [
+          197.5,
+          0
+        ],
+        [
+          197.5,
+          -2.5
+        ],
+        [
+          190,
+          -2.5
+        ]
+      ],
+      "closed": true
+    },
+    {
+      "kind": "text",
+      "id": "title_general_arrangement",
+      "layer": "TEXT",
+      "view_id": "elevation_main",
+      "source_component_id": "drawing_title",
+      "position": [
+        0,
+        10
+      ],
+      "text": "GENERAL ARRANGEMENT",
+      "height": 3.5
+    }
+  ]
+}
+

@@ -1,0 +1,32 @@
+{
+  "project_id": "bridge_001",
+  "bridge": {
+    "type": "continuous_girder",
+    "material": "prestressed_concrete",
+    "spans_m": [
+      200,
+      400,
+      200
+    ],
+    "deck_width_m": 7.5,
+    "alignment": {
+      "type": "straight",
+      "start_station": "K0+000"
+    },
+    "superstructure": {
+      "section_type": "single_box_single_cell",
+      "girder_depth_policy": "auto"
+    },
+    "substructure": {
+      "pier_type": "double_column",
+      "abutment_type": "gravity"
+    },
+    "drawings": [
+      "general_arrangement",
+      "plan",
+      "elevation",
+      "typical_section"
+    ]
+  }
+}
+
