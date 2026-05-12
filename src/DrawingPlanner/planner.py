@@ -26,6 +26,7 @@ VIEW_LAYOUTS = (
         "scale": 100,
     },
 )
+DEFAULT_DRAWINGS = ("general_arrangement", "plan", "elevation", "typical_section")
 
 
 def load_bridge_model_fixture(path: str | Path) -> dict[str, Any]:
@@ -34,6 +35,11 @@ def load_bridge_model_fixture(path: str | Path) -> dict[str, Any]:
 
 
 def create_drawing_plan(bridge_model: dict[str, Any]) -> dict[str, Any]:
+    requested_drawings = bridge_model["bridge"].get("drawings", list(DEFAULT_DRAWINGS))
+    selected_types = {drawing for drawing in requested_drawings if drawing in {"plan", "elevation", "typical_section"}}
+    if not selected_types:
+        selected_types = {"plan", "elevation", "typical_section"}
+
     return {
         "project_id": bridge_model["project_id"],
         "drawing_id": DEFAULT_DRAWING_ID,
@@ -42,5 +48,5 @@ def create_drawing_plan(bridge_model: dict[str, Any]) -> dict[str, Any]:
             "size": DEFAULT_SHEET_SIZE,
             "scale": DEFAULT_SHEET_SCALE,
         },
-        "views": [dict(view) for view in VIEW_LAYOUTS],
+        "views": [dict(view) for view in VIEW_LAYOUTS if view["type"] in selected_types],
     }

@@ -8,6 +8,7 @@ const defaultState = {
   abutmentType: "gravity",
   girderDepthPolicy: "auto",
   girderDepth: 2.5,
+  drawings: ["general_arrangement", "plan", "elevation", "typical_section"],
 };
 
 const samplePrompts = [
@@ -35,6 +36,7 @@ let latestBridgeModel = null;
 let latestInstructionBatch = null;
 let latestAssumptions = [];
 let latestPatchSummary = [];
+let selectedDrawings = [...defaultState.drawings];
 let samplePromptIndex = 0;
 let samplePatchIndex = 0;
 let busyCount = 0;
@@ -63,6 +65,10 @@ const elements = {
   girderDepthPolicy: document.getElementById("girderDepthPolicy"),
   girderDepth: document.getElementById("girderDepth"),
   girderDepthField: document.getElementById("girderDepthField"),
+  drawingPlan: document.getElementById("drawingPlan"),
+  drawingElevation: document.getElementById("drawingElevation"),
+  drawingSection: document.getElementById("drawingSection"),
+  drawingSummaryText: document.getElementById("drawingSummaryText"),
   regenerateButton: document.getElementById("regenerateButton"),
   resetButton: document.getElementById("resetButton"),
   downloadSvgButton: document.getElementById("downloadSvgButton"),
@@ -88,6 +94,7 @@ const elements = {
 });
 
 function applyDefaultState() {
+  selectedDrawings = [...defaultState.drawings];
   elements.promptInput.value = samplePrompts[0];
   elements.patchPromptInput.value = samplePatches[0];
   elements.parserMode.value = "local";
@@ -103,6 +110,7 @@ function applyDefaultState() {
   elements.girderDepthPolicy.value = defaultState.girderDepthPolicy;
   elements.girderDepth.value = String(defaultState.girderDepth);
   syncDepthField();
+  syncDrawingControls();
 }
 
 function updateAssumptions(items) {
@@ -168,6 +176,91 @@ function parseSpans(rawValue) {
     .split(",")
     .map((part) => Number(part.trim()))
     .filter((value) => !Number.isNaN(value));
+}
+
+function normalizeDrawings(drawings) {
+  const allowed = ["general_arrangement", "plan", "elevation", "typical_section"];
+  const values = Array.isArray(drawings)
+    ? drawings.filter((item) => typeof item === "string" && allowed.includes(item))
+    : [];
+  return values.length > 0 ? Array.from(new Set(values)) : [...defaultState.drawings];
+}
+
+function ensureGeneralArrangement(drawings) {
+  const normalized = normalizeDrawings(drawings).filter((item) => item !== "general_arrangement");
+  return ["general_arrangement", ...normalized];
+}
+
+function formatDrawingLabel(drawing) {
+  if (drawing === "general_arrangement") {
+    return "general arrangement";
+  }
+  if (drawing === "typical_section") {
+    return "typical section";
+  }
+  return drawing;
+}
+
+function syncDrawingControls() {
+  const drawings = ensureGeneralArrangement(selectedDrawings);
+  selectedDrawings = drawings;
+  elements.drawingPlan.checked = drawings.includes("plan");
+  elements.drawingElevation.checked = drawings.includes("elevation");
+  elements.drawingSection.checked = drawings.includes("typical_section");
+  elements.drawingSummaryText.textContent = drawings.map(formatDrawingLabel).join(", ");
+}
+
+function detectRequestedDrawings(text) {
+  const normalized = text.toLowerCase();
+  const include = new Set();
+  const exclude = new Set();
+
+  if (/(只|仅|only).*(断面图|横断面|截面图|section)/i.test(normalized)) {
+    return ["general_arrangement", "typical_section"];
+  }
+  if (/(只|仅|only).*(平面图|plan)/i.test(normalized)) {
+    return ["general_arrangement", "plan"];
+  }
+  if (/(只|仅|only).*(立面图|elevation)/i.test(normalized)) {
+    return ["general_arrangement", "elevation"];
+  }
+
+  if (/总图|general arrangement|ga drawing/i.test(normalized)) {
+    include.add("general_arrangement");
+  }
+  if (/平面图|plan view|plan\b/i.test(normalized)) {
+    include.add("plan");
+  }
+  if (/立面图|elevation view|elevation\b/i.test(normalized)) {
+    include.add("elevation");
+  }
+  if (/断面图|横断面|截面图|typical section|section view|\bsection\b/i.test(normalized)) {
+    include.add("typical_section");
+  }
+
+  if (/(不要|不出|去掉|取消|remove|without|exclude|drop).*(平面图|plan)/i.test(normalized)) {
+    exclude.add("plan");
+  }
+  if (/(不要|不出|去掉|取消|remove|without|exclude|drop).*(立面图|elevation)/i.test(normalized)) {
+    exclude.add("elevation");
+  }
+  if (/(不要|不出|去掉|取消|remove|without|exclude|drop).*(断面图|横断面|截面图|section)/i.test(normalized)) {
+    exclude.add("typical_section");
+  }
+
+  if (include.size === 0 && exclude.size === 0) {
+    return null;
+  }
+
+  const requested = exclude.size > 0 ? new Set(defaultState.drawings) : new Set(["general_arrangement"]);
+  include.forEach((item) => requested.add(item));
+  exclude.forEach((item) => requested.delete(item));
+  if (![...requested].some((item) => item !== "general_arrangement")) {
+    requested.add("plan");
+    requested.add("elevation");
+    requested.add("typical_section");
+  }
+  return normalizeDrawings(Array.from(requested));
 }
 
 function parsePrompt(prompt) {
@@ -244,6 +337,13 @@ function parsePrompt(prompt) {
     assumptions.push("Girder depth was not specified, so automatic depth was used.");
   }
 
+  const requestedDrawings = detectRequestedDrawings(normalized);
+  if (requestedDrawings) {
+    parsed.drawings = requestedDrawings;
+  } else {
+    assumptions.push("Requested drawings were not detected, so the existing drawing selection was kept.");
+  }
+
   assumptions.unshift("Bridge type is assumed to be a prestressed continuous girder bridge.");
   return { parsed, assumptions };
 }
@@ -274,7 +374,11 @@ function applyParsedPrompt(result) {
   if (parsed.girderDepth) {
     elements.girderDepth.value = String(parsed.girderDepth);
   }
+  if (parsed.drawings) {
+    selectedDrawings = ensureGeneralArrangement(parsed.drawings);
+  }
   syncDepthField();
+  syncDrawingControls();
   updateAssumptions(assumptions);
 }
 
@@ -304,7 +408,11 @@ function applyIntentPayload(payload) {
   if (intent.substructure?.abutment_type) {
     elements.abutmentType.value = intent.substructure.abutment_type;
   }
+  if (Array.isArray(intent.requested_drawings)) {
+    selectedDrawings = ensureGeneralArrangement(intent.requested_drawings);
+  }
   syncDepthField();
+  syncDrawingControls();
   updateAssumptions(payload.assumptions || []);
 }
 
@@ -409,6 +517,21 @@ function createLocalPatchResponse(bridgeModel, prompt) {
     summary.push("Pier type updated to double-column.");
   }
 
+    const requestedDrawings = detectRequestedDrawings(normalized);
+  if (requestedDrawings) {
+    const currentDrawings = ensureGeneralArrangement(bridgeModel.bridge.drawings);
+    const nextDrawings = ensureGeneralArrangement(requestedDrawings);
+    if (JSON.stringify(currentDrawings) !== JSON.stringify(nextDrawings)) {
+      patches.push({ op: "replace", path: "/bridge/drawings", value: nextDrawings });
+      ["plan", "elevation", "typical_section"].forEach((view) => {
+        if (currentDrawings.includes(view) || nextDrawings.includes(view)) {
+          affectedViews.add(view);
+        }
+      });
+      summary.push(`Requested drawings updated to ${nextDrawings.map(formatDrawingLabel).join(", ")}.`);
+    }
+  }
+
   if (patches.length === 0) {
     throw new Error("No supported model edits were detected in the patch instruction.");
   }
@@ -452,7 +575,7 @@ function buildBridgeModel() {
         pier_type: elements.pierType.value,
         abutment_type: elements.abutmentType.value,
       },
-      drawings: ["general_arrangement", "plan", "elevation", "typical_section"],
+      drawings: ensureGeneralArrangement(selectedDrawings),
     },
   };
 
@@ -468,6 +591,16 @@ function buildBridgeModel() {
 }
 
 function createDrawingPlan(bridgeModel) {
+  const requestedDrawings = ensureGeneralArrangement(bridgeModel.bridge.drawings);
+  const selectedTypes = new Set(
+    requestedDrawings.filter((drawing) => drawing === "plan" || drawing === "elevation" || drawing === "typical_section")
+  );
+  if (selectedTypes.size === 0) {
+    selectedTypes.add("plan");
+    selectedTypes.add("elevation");
+    selectedTypes.add("typical_section");
+  }
+
   return {
     project_id: bridgeModel.project_id,
     drawing_id: "general_arrangement_001",
@@ -485,7 +618,7 @@ function createDrawingPlan(bridgeModel) {
         origin: [190, 0],
         scale: 100,
       },
-    ],
+    ].filter((view) => selectedTypes.has(view.type)),
   };
 }
 
@@ -519,15 +652,13 @@ function createCadInstructionBatch(bridgeModel, drawingPlan) {
   const views = Object.fromEntries(drawingPlan.views.map((view) => [view.view_id, view]));
   const spans = bridgeModel.bridge.spans_m;
   const spanPoints = cumulativeSpanPoints(spans);
-  const elevationOrigin = views.elevation_main.origin;
-  const planOrigin = views.plan_main.origin;
-  const sectionOrigin = views.typical_section_main.origin;
   const totalLength = spans.reduce((sum, span) => sum + span, 0);
-  const halfWidth = bridgeModel.bridge.deck_width_m / 2;
   const depth = resolveSectionDepth(bridgeModel);
+  const instructions = [];
 
-  const instructions = [
-    {
+  if (views.elevation_main) {
+    const elevationOrigin = views.elevation_main.origin;
+    instructions.push({
       kind: "polyline",
       id: "elevation_girder_bottom",
       layer: "BRIDGE_GIRDER",
@@ -535,27 +666,31 @@ function createCadInstructionBatch(bridgeModel, drawingPlan) {
       source_component_id: "main_girder",
       points: spanPoints.map((point) => [normalizeNumber(elevationOrigin[0] + point), elevationOrigin[1]]),
       closed: false,
-    },
-  ];
-
-  spans.forEach((span, index) => {
-    const start = spanPoints[index];
-    const end = spanPoints[index + 1];
-    instructions.push({
-      kind: "aligned_dimension",
-      id: `dim_span_${index + 1}`,
-      layer: "DIM",
-      view_id: "elevation_main",
-      source_component_id: `span_${index + 1}`,
-      from: [normalizeNumber(start), -5],
-      to: [normalizeNumber(end), -5],
-      dimension_line_point: [normalizeNumber((start + end) / 2), -12],
-      text: `${formatLength(span)}m`,
     });
-  });
+    spans.forEach((span, index) => {
+      const start = spanPoints[index];
+      const end = spanPoints[index + 1];
+      instructions.push({
+        kind: "aligned_dimension",
+        id: `dim_span_${index + 1}`,
+        layer: "DIM",
+        view_id: "elevation_main",
+        source_component_id: `span_${index + 1}`,
+        from: [normalizeNumber(elevationOrigin[0] + start), normalizeNumber(elevationOrigin[1] - 5)],
+        to: [normalizeNumber(elevationOrigin[0] + end), normalizeNumber(elevationOrigin[1] - 5)],
+        dimension_line_point: [
+          normalizeNumber(elevationOrigin[0] + (start + end) / 2),
+          normalizeNumber(elevationOrigin[1] - 12),
+        ],
+        text: `${formatLength(span)}m`,
+      });
+    });
+  }
 
-  instructions.push(
-    {
+  if (views.plan_main) {
+    const planOrigin = views.plan_main.origin;
+    const halfWidth = bridgeModel.bridge.deck_width_m / 2;
+    instructions.push({
       kind: "polyline",
       id: "plan_deck_outline",
       layer: "BRIDGE_DECK",
@@ -568,8 +703,12 @@ function createCadInstructionBatch(bridgeModel, drawingPlan) {
         [planOrigin[0], normalizeNumber(planOrigin[1] + halfWidth)],
       ],
       closed: true,
-    },
-    {
+    });
+  }
+
+  if (views.typical_section_main) {
+    const sectionOrigin = views.typical_section_main.origin;
+    instructions.push({
       kind: "polyline",
       id: "typical_section_outline",
       layer: "BRIDGE_SECTION",
@@ -585,18 +724,22 @@ function createCadInstructionBatch(bridgeModel, drawingPlan) {
         [sectionOrigin[0], normalizeNumber(sectionOrigin[1] - depth)],
       ],
       closed: true,
-    },
-    {
+    });
+  }
+
+  const titleView = views.elevation_main || views.plan_main || views.typical_section_main;
+  if (titleView) {
+    instructions.push({
       kind: "text",
       id: "title_general_arrangement",
       layer: "TEXT",
-      view_id: "elevation_main",
+      view_id: titleView.view_id,
       source_component_id: "drawing_title",
-      position: [0, 10],
+      position: [titleView.origin[0], normalizeNumber(titleView.origin[1] + 10)],
       text: "GENERAL ARRANGEMENT",
       height: 3.5,
-    }
-  );
+    });
+  }
 
   return {
     project_id: drawingPlan.project_id,
@@ -691,6 +834,15 @@ function renderInstruction(instruction, bounds) {
 }
 
 function renderSvgDocument(instructionBatch) {
+  if (!instructionBatch.instructions.length) {
+    return `
+      <svg xmlns="http://www.w3.org/2000/svg" width="480" height="160" viewBox="0 0 480 160" role="img" aria-label="VibeDraw preview">
+        <rect width="480" height="160" fill="#f8fafc"></rect>
+        <text x="24" y="72" fill="#111827" font-family="Consolas, monospace" font-size="18">No drawable views are currently selected.</text>
+      </svg>
+    `.trim();
+  }
+
   const bounds = computeBounds(instructionBatch.instructions);
   const width = Math.max(Math.ceil(bounds.maxX - bounds.minX + padding * 2), 1);
   const height = Math.max(Math.ceil(bounds.maxY - bounds.minY + padding * 2), 1);
@@ -723,11 +875,13 @@ function updateOutputs(bridgeModel, instructionBatch, svg) {
 function regenerate() {
   try {
     const bridgeModel = buildBridgeModel();
+    selectedDrawings = ensureGeneralArrangement(bridgeModel.bridge.drawings);
+    syncDrawingControls();
     const drawingPlan = createDrawingPlan(bridgeModel);
     const instructionBatch = createCadInstructionBatch(bridgeModel, drawingPlan);
     const svg = renderSvgDocument(instructionBatch);
     updateOutputs(bridgeModel, instructionBatch, svg);
-    elements.statusText.textContent = `Preview regenerated for spans ${bridgeModel.bridge.spans_m.join(" + ")} m and width ${bridgeModel.bridge.deck_width_m} m.`;
+    elements.statusText.textContent = `Preview regenerated for ${bridgeModel.bridge.drawings.map(formatDrawingLabel).join(", ")} with spans ${bridgeModel.bridge.spans_m.join(" + ")} m and width ${bridgeModel.bridge.deck_width_m} m.`;
     logEvent(`Preview regenerated for project ${bridgeModel.project_id}.`);
   } catch (error) {
     elements.statusText.textContent = error.message;
@@ -872,9 +1026,40 @@ function downloadText(filename, content, mimeType) {
   URL.revokeObjectURL(url);
 }
 
+function updateSelectedDrawingsFromControls() {
+  const nextDrawings = ["general_arrangement"];
+  if (elements.drawingPlan.checked) {
+    nextDrawings.push("plan");
+  }
+  if (elements.drawingElevation.checked) {
+    nextDrawings.push("elevation");
+  }
+  if (elements.drawingSection.checked) {
+    nextDrawings.push("typical_section");
+  }
+
+  if (nextDrawings.length === 1) {
+    elements.statusText.textContent = "At least one drawable view is required, so the previous selection was kept.";
+    syncDrawingControls();
+    return;
+  }
+
+  selectedDrawings = nextDrawings;
+  syncDrawingControls();
+  regenerate();
+}
+
 elements.girderDepthPolicy.addEventListener("change", () => {
   syncDepthField();
   regenerate();
+});
+
+[
+  elements.drawingPlan,
+  elements.drawingElevation,
+  elements.drawingSection,
+].forEach((element) => {
+  element.addEventListener("change", updateSelectedDrawingsFromControls);
 });
 
 [

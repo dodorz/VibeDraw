@@ -89,6 +89,10 @@ body {
   margin-top: 18px;
 }
 
+.compact-panel {
+  margin-top: 18px;
+}
+
 .service-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -215,6 +219,56 @@ body {
 
 .assumption-block li + li {
   margin-top: 6px;
+}
+
+.drawing-picker {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.drawing-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(95, 107, 122, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+}
+
+.drawing-option input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.drawing-option span {
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+
+.selection-summary {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(95, 107, 122, 0.12);
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.selection-summary p {
+  margin: 8px 0 0;
+  color: var(--ink);
+  line-height: 1.45;
 }
 
 .status-band {

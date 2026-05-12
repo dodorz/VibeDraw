@@ -37,6 +37,38 @@ class ParsingTests(unittest.TestCase):
         )
         self.assertEqual(patch["affected_views"], ["elevation", "plan", "typical_section"])
 
+    def test_parse_prompt_detects_requested_drawings(self) -> None:
+        intent = parse_prompt_to_intent("画一座40+70+40米跨径的桥，只生成断面图。")
+        self.assertEqual(intent["requested_drawings"], ["general_arrangement", "typical_section"])
+
+    def test_patch_response_can_switch_to_section_only(self) -> None:
+        current_model = {
+            "project_id": "bridge_001",
+            "bridge": {
+                "spans_m": [40, 70, 40],
+                "deck_width_m": 7.5,
+                "superstructure": {
+                    "section_type": "single_box_single_cell",
+                    "girder_depth_policy": "auto",
+                },
+                "substructure": {
+                    "pier_type": "double_column",
+                    "abutment_type": "gravity",
+                },
+                "drawings": ["general_arrangement", "plan", "elevation", "typical_section"],
+            },
+        }
+        patch = create_patch_response(current_model, "改成只出断面图。")
+        self.assertIn(
+            {
+                "op": "replace",
+                "path": "/bridge/drawings",
+                "value": ["general_arrangement", "typical_section"],
+            },
+            patch["patches"],
+        )
+        self.assertEqual(patch["affected_views"], ["elevation", "plan", "typical_section"])
+
     def test_mock_backend_returns_service_shape(self) -> None:
         payload = MockIntentBackend().parse_initial_intent(
             "Draw a prestressed continuous girder bridge with spans 30+50+30 m and deck width 9.5 m."
@@ -49,4 +81,3 @@ class ParsingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

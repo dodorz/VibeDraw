@@ -56,6 +56,36 @@ class DrawingGeneratorTests(unittest.TestCase):
             self.assertIn("view_id", instruction)
             self.assertIn("source_component_id", instruction)
 
+    def test_drawing_plan_respects_requested_drawings(self) -> None:
+        section_only_model = json.loads(json.dumps(self.bridge_model))
+        section_only_model["bridge"]["drawings"] = ["general_arrangement", "typical_section"]
+
+        drawing_plan = create_drawing_plan(section_only_model)
+
+        self.assertEqual(
+            [view["view_id"] for view in drawing_plan["views"]],
+            ["typical_section_main"],
+        )
+
+    def test_instruction_batch_respects_requested_drawings(self) -> None:
+        section_only_model = json.loads(json.dumps(self.bridge_model))
+        section_only_model["bridge"]["drawings"] = ["general_arrangement", "typical_section"]
+
+        drawing_plan = create_drawing_plan(section_only_model)
+        batch = create_cad_instruction_batch(section_only_model, drawing_plan)
+
+        instruction_ids = {instruction["id"] for instruction in batch["instructions"]}
+        self.assertIn("typical_section_outline", instruction_ids)
+        self.assertIn("title_general_arrangement", instruction_ids)
+        self.assertNotIn("elevation_girder_bottom", instruction_ids)
+        self.assertNotIn("plan_deck_outline", instruction_ids)
+        title = next(
+            instruction
+            for instruction in batch["instructions"]
+            if instruction["id"] == "title_general_arrangement"
+        )
+        self.assertEqual(title["view_id"], "typical_section_main")
+
 
 if __name__ == "__main__":
     unittest.main()

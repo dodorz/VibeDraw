@@ -10,6 +10,7 @@ DEFAULT_DRAWINGS = [
     "elevation",
     "typical_section",
 ]
+DRAWING_VIEW_TYPES = {"plan", "elevation", "typical_section"}
 
 
 def parse_prompt_to_intent(prompt: str) -> dict[str, Any]:
@@ -50,6 +51,11 @@ def parse_prompt_to_intent(prompt: str) -> dict[str, Any]:
     if girder_depth_m is None:
         assumptions.append("Girder depth was not specified, so automatic girder depth was assumed.")
 
+    requested_drawings = detect_requested_drawings(text)
+    if requested_drawings is None:
+        requested_drawings = list(DEFAULT_DRAWINGS)
+        assumptions.append("Requested drawings were not detected, so plan, elevation, and typical section were assumed.")
+
     assumptions.insert(0, "Bridge type is assumed to be a prestressed continuous girder bridge.")
 
     superstructure: dict[str, Any] = {
@@ -71,7 +77,7 @@ def parse_prompt_to_intent(prompt: str) -> dict[str, Any]:
             "pier_type": pier_type,
             "abutment_type": abutment_type,
         },
-        "requested_drawings": list(DEFAULT_DRAWINGS),
+        "requested_drawings": requested_drawings,
         "assumptions": assumptions,
         "questions": [],
     }
@@ -141,6 +147,63 @@ def detect_abutment_type(text: str) -> str | None:
     if re.search(r"重力式|gravity", text, re.IGNORECASE):
         return "gravity"
     return None
+
+
+def detect_requested_drawings(text: str) -> list[str] | None:
+    normalized = text.lower()
+    include: set[str] = set()
+    exclude: set[str] = set()
+
+    if re.search(r"(只|仅|only).*(断面图|横断面|截面图|section)", normalized, re.IGNORECASE):
+        return ["general_arrangement", "typical_section"]
+    if re.search(r"(只|仅|only).*(平面图|plan)", normalized, re.IGNORECASE):
+        return ["general_arrangement", "plan"]
+    if re.search(r"(只|仅|only).*(立面图|elevation)", normalized, re.IGNORECASE):
+        return ["general_arrangement", "elevation"]
+
+    if _mentions_general_arrangement(normalized):
+        include.add("general_arrangement")
+    if _mentions_plan(normalized):
+        include.add("plan")
+    if _mentions_elevation(normalized):
+        include.add("elevation")
+    if _mentions_typical_section(normalized):
+        include.add("typical_section")
+
+    if re.search(r"(不要|不出|去掉|取消|remove|without|exclude|drop).*(平面图|plan)", normalized, re.IGNORECASE):
+        exclude.add("plan")
+    if re.search(r"(不要|不出|去掉|取消|remove|without|exclude|drop).*(立面图|elevation)", normalized, re.IGNORECASE):
+        exclude.add("elevation")
+    if re.search(r"(不要|不出|去掉|取消|remove|without|exclude|drop).*(断面图|横断面|截面图|section)", normalized, re.IGNORECASE):
+        exclude.add("typical_section")
+
+    if not include and not exclude:
+        return None
+
+    requested = set(DEFAULT_DRAWINGS if exclude else ["general_arrangement"])
+    if include:
+        requested.update(include)
+    requested.difference_update(exclude)
+    if DRAWING_VIEW_TYPES.isdisjoint(requested):
+        requested.update(DRAWING_VIEW_TYPES)
+    ordered = [drawing for drawing in DEFAULT_DRAWINGS if drawing in requested]
+    return ordered or list(DEFAULT_DRAWINGS)
+
+
+def _mentions_general_arrangement(text: str) -> bool:
+    return bool(re.search(r"总图|general arrangement|ga drawing", text, re.IGNORECASE))
+
+
+def _mentions_plan(text: str) -> bool:
+    return bool(re.search(r"平面图|plan view|plan\b", text, re.IGNORECASE))
+
+
+def _mentions_elevation(text: str) -> bool:
+    return bool(re.search(r"立面图|elevation view|elevation\b", text, re.IGNORECASE))
+
+
+def _mentions_typical_section(text: str) -> bool:
+    return bool(re.search(r"断面图|横断面|截面图|typical section|section view|\bsection\b", text, re.IGNORECASE))
 
 
 def create_patch_response(current_model: dict[str, Any], prompt: str) -> dict[str, Any]:
@@ -216,8 +279,23 @@ def create_patch_response(current_model: dict[str, Any], prompt: str) -> dict[st
         )
         affected_views.update({"elevation", "typical_section"})
 
+    requested_drawings = detect_requested_drawings(text)
+    current_drawings = current_model["bridge"].get("drawings", list(DEFAULT_DRAWINGS))
+    if requested_drawings and requested_drawings != current_drawings:
+        patches.append(
+            {
+                "op": "replace",
+                "path": "/bridge/drawings",
+                "value": requested_drawings,
+            }
+        )
+        affected_views.update(
+            view
+            for view in DRAWING_VIEW_TYPES
+            if view in set(current_drawings) or view in set(requested_drawings)
+        )
+
     return {
         "patches": patches,
         "affected_views": sorted(affected_views),
     }
-

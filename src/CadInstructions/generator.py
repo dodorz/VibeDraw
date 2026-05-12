@@ -146,23 +146,34 @@ def create_cad_instruction_batch(
 ) -> dict[str, Any]:
     views = _view_map(drawing_plan)
     instructions = []
-    instructions.extend(_elevation_instructions(bridge_model, views["elevation_main"]))
-    instructions.extend(_plan_instructions(bridge_model, views["plan_main"]))
-    instructions.extend(
-        _typical_section_instructions(bridge_model, views["typical_section_main"])
+    if "elevation_main" in views:
+        instructions.extend(_elevation_instructions(bridge_model, views["elevation_main"]))
+    if "plan_main" in views:
+        instructions.extend(_plan_instructions(bridge_model, views["plan_main"]))
+    if "typical_section_main" in views:
+        instructions.extend(
+            _typical_section_instructions(bridge_model, views["typical_section_main"])
+        )
+
+    title_view = (
+        views.get("elevation_main")
+        or views.get("plan_main")
+        or views.get("typical_section_main")
     )
-    instructions.append(
-        {
-            "kind": "text",
-            "id": "title_general_arrangement",
-            "layer": "TEXT",
-            "view_id": views["elevation_main"]["view_id"],
-            "source_component_id": "drawing_title",
-            "position": [0, 10],
-            "text": "GENERAL ARRANGEMENT",
-            "height": 3.5,
-        }
-    )
+    if title_view is not None:
+        origin_x, origin_y = title_view["origin"]
+        instructions.append(
+            {
+                "kind": "text",
+                "id": "title_general_arrangement",
+                "layer": "TEXT",
+                "view_id": title_view["view_id"],
+                "source_component_id": "drawing_title",
+                "position": [origin_x, origin_y + 10],
+                "text": "GENERAL ARRANGEMENT",
+                "height": 3.5,
+            }
+        )
 
     return {
         "project_id": drawing_plan["project_id"],

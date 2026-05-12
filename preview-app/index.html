@@ -139,6 +139,31 @@
           </label>
         </section>
 
+        <section class="prompt-panel compact-panel">
+          <div class="section-heading">
+            <p class="eyebrow">Views</p>
+            <h2>Drawing Selection</h2>
+          </div>
+          <div class="drawing-picker" id="drawingPicker">
+            <label class="drawing-option">
+              <input id="drawingPlan" type="checkbox" />
+              <span>Plan</span>
+            </label>
+            <label class="drawing-option">
+              <input id="drawingElevation" type="checkbox" />
+              <span>Elevation</span>
+            </label>
+            <label class="drawing-option">
+              <input id="drawingSection" type="checkbox" />
+              <span>Typical Section</span>
+            </label>
+          </div>
+          <div class="selection-summary">
+            <span class="summary-label">Current output</span>
+            <p id="drawingSummaryText">General arrangement, plan, elevation, typical section</p>
+          </div>
+        </section>
+
         <section class="actions-row">
           <button id="regenerateButton" class="primary-button" type="button">
             Regenerate Preview

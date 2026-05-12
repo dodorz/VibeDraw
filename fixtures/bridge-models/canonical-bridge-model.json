@@ -4,9 +4,9 @@
     "type": "continuous_girder",
     "material": "prestressed_concrete",
     "spans_m": [
-      200,
-      400,
-      200
+      40,
+      70,
+      40
     ],
     "deck_width_m": 7.5,
     "alignment": {
@@ -29,4 +29,3 @@
     ]
   }
 }
-
